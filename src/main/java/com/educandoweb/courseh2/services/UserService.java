@@ -3,6 +3,8 @@ package com.educandoweb.courseh2.services;
 import java.util.List;
 import java.util.Optional;
 
+import javax.persistence.EntityNotFoundException;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -15,45 +17,49 @@ import com.educandoweb.courseh2.services.exceptions.ResourceNotFoundException;
 
 @Service
 public class UserService {
-	
+
 	@Autowired
 	private UserRepository userRepository;
 
-	public List<User> findall(){
+	public List<User> findall() {
 		return userRepository.findAll();
 	}
-	
-	public User findById (Long id) {
+
+	public User findById(Long id) {
 		Optional<User> obj = userRepository.findById(id);
-		return obj.orElseThrow(()-> new ResourceNotFoundException(id));
+		return obj.orElseThrow(() -> new ResourceNotFoundException(id));
 	}
-	
+
 	public User insert(User obj) {
 		return userRepository.save(obj);
 	}
-	
-	public void delete (Long id) {
+
+	public void delete(Long id) {
 		try {
-		userRepository.deleteById(id);
-		}catch (EmptyResultDataAccessException e) {
+			userRepository.deleteById(id);
+		} catch (EmptyResultDataAccessException e) {
 			throw new ResourceNotFoundException(id);
-		}catch(DataIntegrityViolationException e) {
+		} catch (DataIntegrityViolationException e) {
 			throw new DatabaseException(e.getMessage());
 		}
 	}
-	
+
 	@SuppressWarnings("deprecation")
-	public User update (Long id, User obj) {
-		
-		User entity = userRepository.getOne(id);
-		updateData(entity, obj);
-		return userRepository.save(entity);
+	public User update(Long id, User obj) {
+		try {
+			User entity = userRepository.getOne(id);
+			updateData(entity, obj);
+			return userRepository.save(entity);
+
+		} catch (EntityNotFoundException e) {
+			throw new ResourceNotFoundException(id);
+		}
 	}
 
 	private void updateData(User entity, User obj) {
 		entity.setName(obj.getName());
 		entity.setEmail(obj.getEmail());
 		entity.setPhone(obj.getPhone());
-		
+
 	}
 }
